@@ -5,100 +5,112 @@ export default class Platformer extends Phaser.State {
 
     platforms: any;
     player: Phaser.Sprite;
+    cursor: Phaser.CursorKeys;
+    walls: any;
+    coins: any;
+    enemies: any;
     
     public preload(): void {
-      this.game.load.image(Assets.Images.ImagesSky.getName(), Assets.Images.ImagesSky.getPNG());
-      this.game.load.image(Assets.Images.ImagesPlatform.getName(), Assets.Images.ImagesPlatform.getPNG());
-      this.game.load.image(Assets.Images.ImagesStar.getName(), Assets.Images.ImagesStar.getPNG());
-      this.game.load.spritesheet(Assets.Images.ImagesDude.getName(), Assets.Images.ImagesDude.getPNG(), 32, 48);
+        this.game.load.image('player', require('assets/images/player.png'));
+        this.game.load.image('wall', require('assets/images/wall.png'));
+        this.game.load.image('coin', require('assets/images/coin.png'));
+        this.game.load.image('enemy', require('assets/images/enemy.png'));
     }
 
     create() {
 
-      //  We're going to be using physics, so enable the Arcade Physics system
+      // Set the background color to blue
+      this.game.stage.backgroundColor = '#3598db';
+
+      // Start the Arcade physics system (for movements and collisions)
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-      //  A simple background for our game
-      this.game.add.sprite(0, 0, 'sky');
+      // Add the physics engine to all game objects
+      this.game.world.enableBody = true;
 
-      //  The platforms group contains the ground and the 2 ledges we can jump on
-      this.platforms = this.game.add.group();
+      // Variable to store the arrow key pressed
+      this.cursor = this.game.input.keyboard.createCursorKeys();
 
-      //  We will enable physics for any object that is created in this group
-      this.platforms.enableBody = true;
+      // Create the player in the middle of the game
+      this.player = this.game.add.sprite(70, 100, 'player');
 
-      // Here we create the ground.
-      let ground = this.platforms.create(0, this.game.world.height - 64, 'platform');
-
-      //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-      ground.scale.setTo(2, 2);
-
-      //  This stops it from falling away when you jump on it
-      ground.body.immovable = true;
-
-      //  Now let's create two ledges
-      let ledge = this.platforms.create(400, 400, 'platform');
-
-      ledge.body.immovable = true;
-
-      ledge = this.platforms.create(-150, 250, 'platform');
-
-      ledge.body.immovable = true;
-
-      // The player and its settings
-      this.player = this.game.add.sprite(32, this.game.world.height - 150, 'dude');
-
-      //  We need to enable physics on the player
-      this.game.physics.arcade.enable(this.player);
-
-      //  Player physics properties. Give the little guy a slight bounce.
-      this.player.body.bounce.y = 0.2;
+      // Add gravity to make it fall
       this.player.body.gravity.y = 600;
-      this.player.body.collideWorldBounds = true;
 
-      //  Our two animations, walking left and right.
-      this.player.animations.add('left', [0, 1, 2, 3], 10, true);
-      this.player.animations.add('right', [5, 6, 7, 8], 10, true);
+      // Create 3 groups that will contain our objects
+      this.walls = this.game.add.group();
+      this.coins = this.game.add.group();
+      this.enemies = this.game.add.group();
+
+      // Design the level. x = wall, o = coin, ! = lava.
+      var level = [
+          'xxxxxxxxxxxxxxxxxxxxxx',
+          '!         !          x',
+          '!                 o  x',
+          '!         o          x',
+          '!                    x',
+          '!     o   !    x     x',
+          'xxxxxxxxxxxxxxxx!!!!!x',
+      ];
+
+      // Create the level by going through the array
+      for (var i = 0; i < level.length; i++) {
+          for (var j = 0; j < level[i].length; j++) {
+
+              // Create a wall and add it to the 'walls' group
+              if (level[i][j] == 'x') {
+                  var wall = this.game.add.sprite(30+20*j, 30+20*i, 'wall');
+                  this.walls.add(wall);
+                  wall.body.immovable = true; 
+              }
+
+              // Create a coin and add it to the 'coins' group
+              else if (level[i][j] == 'o') {
+                  var coin = this.game.add.sprite(30+20*j, 30+20*i, 'coin');
+                  this.coins.add(coin);
+              }
+
+              // Create a enemy and add it to the 'enemies' group
+              else if (level[i][j] == '!') {
+                  var enemy = this.game.add.sprite(30+20*j, 30+20*i, 'enemy');
+                  this.enemies.add(enemy);
+              }
+          }
+      }
     }
 
     update() {
 
-        //  Collide the player and the stars with the platforms
-        let hitPlatform = this.game.physics.arcade.collide(this.player, this.platforms);
+       // Move the player when an arrow key is pressed
+       if (this.cursor.left.isDown) 
+           this.player.body.velocity.x = -200;
+       else if (this.cursor.right.isDown) 
+           this.player.body.velocity.x = 200;
+       else 
+           this.player.body.velocity.x = 0;
 
-        // controls
-        let cursors = this.game.input.keyboard.createCursorKeys();
-        
-        //  Reset the players velocity (movement)
-        this.player.body.velocity.x = 0;
+       // Make the player jump if he is touching the ground
+       if (this.cursor.up.isDown && this.player.body.touching.down) 
+           this.player.body.velocity.y = -250;
 
-        if (cursors.left.isDown)
-        {
-            //  Move to the left
-            this.player.body.velocity.x = -150;
+        // Make the player and the walls collide
+        this.game.physics.arcade.collide(this.player, this.walls);
 
-            this.player.animations.play('left');
-        }
-        else if (cursors.right.isDown)
-        {
-            //  Move to the right
-            this.player.body.velocity.x = 150;
+        // Call the 'takeCoin' function when the player takes a coin
+        this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this);
 
-            this.player.animations.play('right');
-        }
-        else
-        {
-            //  Stand still
-            this.player.animations.stop();
+        // Call the 'restart' function when the player touches the enemy
+        this.game.physics.arcade.overlap(this.player, this.enemies, this.restart, null, this);
 
-            this.player.frame = 4;
-        }
+    }
 
-        //  Allow the player to jump if they are touching the ground.
-        if (cursors.up.isDown && this.player.body.touching.down && hitPlatform)
-        {
-            this.player.body.velocity.y = -350;
-        }
+    // Function to kill a coin
+    takeCoin(player, coin) {
+        coin.kill();
+    }
 
+    // Function to restart the game
+    restart() {
+        this.game.state.start('main');
     }
 }

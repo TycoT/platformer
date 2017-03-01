@@ -11,6 +11,11 @@ export namespace Images {
 
         static getPNG(): string { return require('assets/images/baddie.png'); };
     }
+    export class ImagesCoin {
+        static getName(): string { return 'coin'; };
+
+        static getPNG(): string { return require('assets/images/coin.png'); };
+    }
     export class ImagesDiamond {
         static getName(): string { return 'diamond'; };
 
@@ -20,6 +25,11 @@ export namespace Images {
         static getName(): string { return 'dude'; };
 
         static getPNG(): string { return require('assets/images/dude.png'); };
+    }
+    export class ImagesEnemy {
+        static getName(): string { return 'enemy'; };
+
+        static getPNG(): string { return require('assets/images/enemy.png'); };
     }
     export class ImagesFirstaid {
         static getName(): string { return 'firstaid'; };
@@ -31,6 +41,11 @@ export namespace Images {
 
         static getPNG(): string { return require('assets/images/platform.png'); };
     }
+    export class ImagesPlayer {
+        static getName(): string { return 'player'; };
+
+        static getPNG(): string { return require('assets/images/player.png'); };
+    }
     export class ImagesSky {
         static getName(): string { return 'sky'; };
 
@@ -40,6 +55,11 @@ export namespace Images {
         static getName(): string { return 'star'; };
 
         static getPNG(): string { return require('assets/images/star.png'); };
+    }
+    export class ImagesWall {
+        static getName(): string { return 'wall'; };
+
+        static getPNG(): string { return require('assets/images/wall.png'); };
     }
 }
 
