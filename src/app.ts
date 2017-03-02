@@ -37,8 +37,8 @@ function startApp(): void {
 
     // There are a few more options you can set if needed, just take a look at Phaser.IGameCongig
     let gameConfig: Phaser.IGameConfig = {
-        width: 500,
-        height: 200,
+        width: gameWidth+500,
+        height: gameHeight,
         renderer: Phaser.AUTO,
         parent: '',
         resolution: 1
